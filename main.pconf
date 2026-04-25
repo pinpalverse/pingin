@@ -1,0 +1,6 @@
+# test comment
+http_dir="/usr/share/httpd"
+port=8080
+https=false
+404_fallback=""
+version=1.0
