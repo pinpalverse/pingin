@@ -56,11 +56,25 @@ int parse(const char *filename, Conf* cfg) {
     }
     cfg->values[i] = (ConfKV*)malloc(sizeof(c));
     strncpy(c.k, &tk[0], ix);
+    c.k[ix] = '\0';
     if(s[1] == '"'){
-      strncpy(c.v, &s[2], strlen(s)-3+1);
-      cfg->values[i]->v_type = TEXT;
-    }else{
+      strncpy(c.v, &s[2], strlen(s)-3);
+      c.v_type = TEXT;
+    }
+    else if(strcmp(&s[1], "false") == 0 || strcmp(&s[1], "true") == 0){
       strcpy(c.v, &s[1]);
+      c.v_type = BOOL;
+    }else if(strspn(&s[1], "0123456789") == strlen(&s[1])){
+      strcpy(c.v, &s[1]);
+      c.v_type = INT;
+    }
+    else if(strchrnul(&s[1],'.') == strrchr(&s[1], '.')){ // using strchrnul cause if '.' is not found, one will return the pointer to the null byte and one will return NULL, hence avoiding extra checks
+      strcpy(c.v, &s[1]);
+      c.v_type = FLOAT;
+    }
+    else{
+      printf("parsing error, unknown token at '%s'\n", tk);
+      return 2;
     }
     
     memcpy(cfg->values[i], &c, sizeof(c));
