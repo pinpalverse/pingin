@@ -1,0 +1,3 @@
+[submodule "pinconf"]
+	path = pinconf
+	url = https://github.com/pinpalverse/pinconf
