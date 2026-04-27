@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "conf_parser.h"
+#include "pinconf/pinconf.h"
 
 
 int main(){

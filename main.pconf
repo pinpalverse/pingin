@@ -1,8 +1,5 @@
-# test comment
 http_dir="/usr/share/httpd"
 port=8080
 https=false
 404_fallback=""
 version=1.00000000
-ratio=0.5
-pi=3.14159
