@@ -1,5 +1,5 @@
 all:
-	gcc main.c -g -o out
+	gcc main.c -g -o out -Wall -Wextra
 
 
 clean:
