@@ -3,3 +3,6 @@ port=8080
 https=false
 404_fallback=""
 version=1.00000000
+
+// number of connections to queue before refusing
+n_cncts_to_queue=3
