@@ -128,5 +128,6 @@ CLEANUP:
         free(conf.values[i]->v);
         free(conf.values[i]);
     }
+    free(conf.values);
     return return_out;
 }
