@@ -1,10 +1,13 @@
 #include "pinconf/pinconf.h"
+#include "pinconf/pinmem/pinmem.h"
 #include "pinlog/pinlog.h"
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "include/httpparser.h"
+
 
 #ifndef EXIT_FAILURE
     #define EXIT_FAILURE 1
@@ -118,6 +121,13 @@ int main()
         return_out = EXIT_FAILURE;
         goto CLEANUP;
     }
+    char* buff = (char*)pmalloc(2048, 9);
+    int r = read(ns,buff,2047);
+    buff[r] = '\0';
+    HTTP http_struct;
+    int s = http_parse(&http_struct, buff, r);
+    if(s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
+    printf("%s\n", buff);
     send(ns, payload, strlen(payload), 0);
     close(ns);
     close(server_fd);
@@ -129,5 +139,6 @@ CLEANUP:
         free(conf.values[i]);
     }
     free(conf.values);
+    pfree(buff,9);
     return return_out;
 }
