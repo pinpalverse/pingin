@@ -121,7 +121,7 @@ int main()
         return_out = EXIT_FAILURE;
         goto CLEANUP;
     }
-    char* buff = (char*)pmalloc(2048, 9);
+    char* buff = (char*)pmalloc(2048);
     int r = read(ns,buff,2047);
     buff[r] = '\0';
     HTTP http_struct;
@@ -134,11 +134,11 @@ int main()
 CLEANUP:
     for (int i = 0; i < conf.columns; i++)
     {
-        free(conf.values[i]->k);
-        free(conf.values[i]->v);
-        free(conf.values[i]);
+        pfree(conf.values[i]->k);
+        pfree(conf.values[i]->v);
+        pfree(conf.values[i]);
     }
-    free(conf.values);
-    pfree(buff,9);
+    pfree(conf.values);
+    pfree(buff);
     return return_out;
 }
