@@ -99,6 +99,7 @@ int main()
     }
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
+    printf("port: %s\n",port->v);
     addr.sin_port = htons(atoi(port->v));
     if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
     {
@@ -126,6 +127,7 @@ int main()
     buff[r] = '\0';
     HTTP http_struct;
     int s = http_parse(&http_struct, buff, r);
+    printf("path: %s\n",http_struct.path.s);
     if(s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
     printf("%s\n", buff);
     send(ns, payload, strlen(payload), 0);

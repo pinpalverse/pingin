@@ -1,78 +1,101 @@
 #ifndef __PIN_HTTP_PARSER
 #define __PIN_HTTP_PARSER
 
-
+#include "../pinmem/pinmem.h"
+#include "../pinlog/pinlog.h"
+#include <string.h>
 static char http_versions[1][4] = {"1.1"};
 
 typedef enum {GET, POST} METHOD;
 
-typedef struct {char *s; int size; int tracker;} PINM;
+typedef struct {char *s; size_t size;} PINHPM;
 
 typedef struct  // Only HTTP 1.X 
 {
     // Request main headers
     METHOD method;
-    PINM path;
+    PINHPM path;
     // Response main headers
     int status;
-    PINM status_reason; // OK, Not Found, Server Error...
+    PINHPM status_reason; // OK, Not Found, Server Error...
     // Shared
     char* version;
 
     // General Headers
-    PINM connection;
-    PINM cache_control;
-    PINM date;
-    PINM pragma;
-    PINM trailer;
-    PINM transfer_encoding;
-    PINM upgrade;
-    PINM via;
-    PINM warning;
+    PINHPM connection;
+    PINHPM cache_control;
+    PINHPM date;
+    PINHPM pragma;
+    PINHPM trailer;
+    PINHPM transfer_encoding;
+    PINHPM upgrade;
+    PINHPM via;
+    PINHPM warning;
     // Request Headers
-    PINM accept;
-    PINM accept_charset;
-    PINM accept_encoding;
-    PINM accept_language;
-    PINM authorization;
-    PINM expect;
-    PINM from;
-    PINM host;
-    PINM if_match;
-    PINM if_modified_since;
-    PINM if_none_match;
-    PINM if_range;
-    PINM if_unmodified_since;
-    PINM max_forwards;
-    PINM proxy_authorization;
-    PINM range;
-    PINM referer;
-    PINM te;
-    PINM user_agent;
+    PINHPM accept;
+    PINHPM accept_charset;
+    PINHPM accept_encoding;
+    PINHPM accept_language;
+    PINHPM authorization;
+    PINHPM expect;
+    PINHPM from;
+    PINHPM host;
+    PINHPM if_match;
+    PINHPM if_modified_since;
+    PINHPM if_none_match;
+    PINHPM if_range;
+    PINHPM if_unmodified_since;
+    PINHPM max_forwards;
+    PINHPM proxy_authorization;
+    PINHPM range;
+    PINHPM referer;
+    PINHPM te;
+    PINHPM user_agent;
     // Response Headers
-    PINM accept_ranges;
-    PINM age;
-    PINM etag;
-    PINM location;
-    PINM proxy_authenticate;
-    PINM retry_after;
-    PINM server;
-    PINM vary;
-    PINM www_authenticate;
+    PINHPM accept_ranges;
+    PINHPM age;
+    PINHPM etag;
+    PINHPM location;
+    PINHPM proxy_authenticate;
+    PINHPM retry_after;
+    PINHPM server;
+    PINHPM vary;
+    PINHPM www_authenticate;
     // Entity Headers
-    PINM allow;
-    PINM content_encoding;
-    PINM content_language;
-    PINM content_length;
-    PINM content_location;
-    PINM content_md5;
-    PINM content_range;
-    PINM content_type;
-    PINM expires;
-    PINM last_modified;
+    PINHPM allow;
+    PINHPM content_encoding;
+    PINHPM content_language;
+    PINHPM content_length;
+    PINHPM content_location;
+    PINHPM content_md5;
+    PINHPM content_range;
+    PINHPM content_type;
+    PINHPM expires;
+    PINHPM last_modified;
 } HTTP;
 
 int http_parse(HTTP* http, char* content, int content_size){
+    int line = 0;
+    char* tk = strtok(content,"\n");
+    while(tk != NULL){
+        
+        if(line == 0){
+            char method[10];
+            char path[2048];
+            char version[100];
+            sscanf(tk, "%s %s %s",method,path,version);
+            if(strcmp(method, "GET") == 0) http->method = GET;
+            else if(strcmp(method, "POST") == 0) http->method = POST;
+            else pinlog(WARN, "HTTP method '%s' unsupported.", method);
+            http->path.size = strlen(path);
+            http->path.s = (char*)pmalloc(http->path.size);
+            strncpy(http->path.s, path, http->path.size);
+        }
+
+
+        tk = strtok(NULL, "\n");
+    }
+    
     return 0;
 }
 

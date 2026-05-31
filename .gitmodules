@@ -4,3 +4,6 @@
 [submodule "pinlog"]
 	path = pinlog
 	url = https://github.com/pinpalverse/pinlog
+[submodule "pinmem"]
+	path = pinmem
+	url = https://github.com/pinpalverse/pinmem
