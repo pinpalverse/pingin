@@ -1,4 +1,4 @@
-#include "pinconf/pinconf.h"
+//#include "pinconf/pinconf.h"
 #include "pinconf/pinmem/pinmem.h"
 #include "pinlog/pinlog.h"
 #include <netinet/in.h>
@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include "include/httpparser.h"
 
-
 #ifndef EXIT_FAILURE
     #define EXIT_FAILURE 1
 #endif
@@ -16,6 +15,7 @@
 int main()
 {
     int return_out = 0;
+    /*
     Conf conf;
     parse("main.pconf", &conf);
     ConfKV* http_dir = search(&conf, "http_dir");
@@ -76,7 +76,9 @@ int main()
         pinlog(ERROR, "n_cncts_to_queue type is not int in the '%s'", conf.filename);
         return_out = EXIT_FAILURE;
         goto CLEANUP;
-    }
+    }*/
+  
+
     // Socket init
     int server_fd, ns;
     struct sockaddr_in addr;
@@ -99,8 +101,8 @@ int main()
     }
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    printf("port: %s\n",port->v);
-    addr.sin_port = htons(atoi(port->v));
+    const int port = 8080;
+    addr.sin_port = htons(port);
     if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
     {
         pinlog(ERROR, "Binding failed: %s", strerror(errno));
@@ -108,7 +110,8 @@ int main()
         return_out = EXIT_FAILURE;
         goto CLEANUP;
     }
-    if (listen(server_fd, atoi(connections_to_queue->v)) < 0)
+    const int connections_to_queue = 2;
+    if (listen(server_fd, connections_to_queue) < 0)
     {
         pinlog(ERROR, "Listen: %s", strerror(errno));
         close(server_fd);
@@ -127,13 +130,16 @@ int main()
     buff[r] = '\0';
     HTTP http_struct;
     int s = http_parse(&http_struct, buff, r);
-    printf("path: %s\n",http_struct.path.s);
+    pinlog(INFO, "Path: %s\n",http_struct.path.s);
     if(s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
-    printf("%s\n", buff);
+    //printf("%s\n", buff);
+    pinlog(INFO, "Host: %s", http_struct.host.s);
+    pinlog(INFO, "User-Agent: %s", http_struct.user_agent.s);
     send(ns, payload, strlen(payload), 0);
     close(ns);
     close(server_fd);
 CLEANUP:
+    /*
     for (int i = 0; i < conf.columns; i++)
     {
         pfree(conf.values[i]->k);
@@ -141,6 +147,17 @@ CLEANUP:
         pfree(conf.values[i]);
     }
     pfree(conf.values);
+    */
+    pfree(http_struct.path.s);
+    http_struct.path.s = NULL;
+    http_struct.path.size = 0;
+    pfree(http_struct.host.s);
+    http_struct.host.s = NULL;
+    http_struct.host.size = 0;
+    pfree(http_struct.user_agent.s);
+    http_struct.user_agent.s = NULL;  
+    http_struct.user_agent.size = 0;  
     pfree(buff);
+    
     return return_out;
 }

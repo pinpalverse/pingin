@@ -12,7 +12,7 @@ typedef struct {char *s; size_t size;} PINHPM;
 
 typedef struct  // Only HTTP 1.X 
 {
-    // Request main headers
+ // Request main headers
     METHOD method;
     PINHPM path;
     // Response main headers
@@ -78,7 +78,7 @@ int http_parse(HTTP* http, char* content, int content_size){
     int line = 0;
     char* tk = strtok(content,"\n");
     while(tk != NULL){
-        
+        if(tk[0] == 13){goto NEXT;}
         if(line == 0){
             char method[10];
             char path[2048];
@@ -90,10 +90,31 @@ int http_parse(HTTP* http, char* content, int content_size){
             http->path.size = strlen(path);
             http->path.s = (char*)pmalloc(http->path.size);
             strncpy(http->path.s, path, http->path.size);
+        }else{
+            size_t key_size;
+            size_t value_size;
+            char* c = strchr(tk, ':');
+            key_size = c - tk;
+            value_size = strlen(&c[2]); // index is two to skip ':' and whitespace
+            if(strncasecmp("host", tk, key_size-1) == 0){
+              http->host.size = value_size;
+              http->host.s = (char*)pmalloc(value_size*sizeof(char));
+              strncpy(http->host.s, &c[2], value_size);
+            }else if (strncasecmp("user-agent", tk, key_size-1) == 0){
+              http->user_agent.size = value_size;
+              http->user_agent.s = (char*)pmalloc(value_size*sizeof(char));
+              strncpy(http->user_agent.s, &c[2], value_size);
+            
+            }
+
+            pinlog(INFO, "%s\n\tKey Size: %d\n\tValue Size: %d",tk, key_size, value_size);
+            
         }
 
+NEXT:
 
         tk = strtok(NULL, "\n");
+        line++;
     }
     
     return 0;
