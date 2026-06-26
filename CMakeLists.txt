@@ -16,8 +16,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)          # add linked directories
 
 # Build-time: look in current build dir (for libpinmem) and in pinlog's location
 set(CMAKE_BUILD_RPATH 
-    "${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:pinlog::pinlog>"
-    "${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:pinmem::pinmem>"
+    "${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:pinlog::pinlog>:${CMAKE_CURRENT_BINARY_DIR}:$<TARGET_FILE_DIR:pinmem::pinmem>"
 )
 
 # Install-time: look in the standard library install directory
