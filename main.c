@@ -1,6 +1,6 @@
 //#include "pinconf/pinconf.h"
-#include "pinconf/pinmem/pinmem.h"
-#include "pinlog/pinlog.h"
+#include <pinmem/pinmem.h>
+#include <pinlog/pinlog.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,8 +1,8 @@
 #ifndef __PIN_HTTP_PARSER
 #define __PIN_HTTP_PARSER
 
-#include "../pinmem/pinmem.h"
-#include "../pinlog/pinlog.h"
+#include <pinmem/pinmem.h>
+#include <pinlog/pinlog.h>
 #include <string.h>
 static char http_versions[1][4] = {"1.1"};
 
