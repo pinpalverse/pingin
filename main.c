@@ -1,163 +1,156 @@
-//#include "pinconf/pinconf.h"
-#include <pinmem/pinmem.h>
-#include <pinlog/pinlog.h>
+// #include "pinconf/pinconf.h"
 #include <netinet/in.h>
+#include <pinlog/pinlog.h>
+#include <pinmem/pinmem.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 #include "include/httpparser.h"
 
 #ifndef EXIT_FAILURE
-    #define EXIT_FAILURE 1
+#define EXIT_FAILURE 1
 #endif
 
-int main()
-{
-    int return_out = 0;
-    /*
-    Conf conf;
-    parse("main.pconf", &conf);
-    ConfKV* http_dir = search(&conf, "http_dir");
-    ConfKV* port = search(&conf, "port");
-    ConfKV* https = search(&conf, "https");
-    ConfKV* notfound_fallback = search(&conf, "404_fallback");
-    ConfKV* connections_to_queue = search(&conf, "n_cncts_to_queue");
-    if (!http_dir)
-    {
-        pinlog(ERROR, "http_dir is not defined in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (!port)
-    {
-        pinlog(ERROR, "port is not defined in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (!https)
-    {
-        pinlog(ERROR, "https is not defined in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (!notfound_fallback)
-    {
-        pinlog(ERROR, "404_fallback is not defined in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    if (!connections_to_queue)
-    {
-        pinlog(ERROR, "n_cncts_to_queue is not defined in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    if (http_dir->v_type != TEXT)
-    {
-        pinlog(ERROR, "http_dir type is not text in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (port->v_type != INT)
-    {
-        pinlog(ERROR, "port type is not int in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (https->v_type != BOOL)
-    {
-        pinlog(ERROR, "https type is not bool in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    } if (notfound_fallback->v_type != TEXT)
-    {
-        pinlog(ERROR, "404_fallback type is not text in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    if (connections_to_queue->v_type != INT)
-    {
-        pinlog(ERROR, "n_cncts_to_queue type is not int in the '%s'", conf.filename);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }*/
-  
+int main() {
+  int return_out = 0;
+  /*
+  Conf conf;
+  parse("main.pconf", &conf);
+  ConfKV* http_dir = search(&conf, "http_dir");
+  ConfKV* port = search(&conf, "port");
+  ConfKV* https = search(&conf, "https");
+  ConfKV* notfound_fallback = search(&conf, "404_fallback");
+  ConfKV* connections_to_queue = search(&conf, "n_cncts_to_queue");
+  if (!http_dir)
+  {
+      pinlog(ERROR, "http_dir is not defined in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (!port)
+  {
+      pinlog(ERROR, "port is not defined in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (!https)
+  {
+      pinlog(ERROR, "https is not defined in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (!notfound_fallback)
+  {
+      pinlog(ERROR, "404_fallback is not defined in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  }
+  if (!connections_to_queue)
+  {
+      pinlog(ERROR, "n_cncts_to_queue is not defined in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  }
+  if (http_dir->v_type != TEXT)
+  {
+      pinlog(ERROR, "http_dir type is not text in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (port->v_type != INT)
+  {
+      pinlog(ERROR, "port type is not int in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (https->v_type != BOOL)
+  {
+      pinlog(ERROR, "https type is not bool in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  } if (notfound_fallback->v_type != TEXT)
+  {
+      pinlog(ERROR, "404_fallback type is not text in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  }
+  if (connections_to_queue->v_type != INT)
+  {
+      pinlog(ERROR, "n_cncts_to_queue type is not int in the '%s'", conf.filename);
+      return_out = EXIT_FAILURE;
+      goto CLEANUP;
+  }*/
 
-    // Socket init
-    int server_fd, ns;
-    struct sockaddr_in addr;
-    int opt = 1;
-    socklen_t addrlen = sizeof(addr);
-    char *payload = "<html><body><h1>Hello</h1><body></html>";
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        pinlog(ERROR, "Socket failed: %s", strerror(errno));
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-                   sizeof(opt)))
-    {
-        pinlog(ERROR, "Setsockopt failed: %s", strerror(errno));
-        close(server_fd);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    const int port = 8080;
-    addr.sin_port = htons(port);
-    if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
-    {
-        pinlog(ERROR, "Binding failed: %s", strerror(errno));
-        close(server_fd);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    const int connections_to_queue = 2;
-    if (listen(server_fd, connections_to_queue) < 0)
-    {
-        pinlog(ERROR, "Listen: %s", strerror(errno));
-        close(server_fd);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    if ((ns = accept(server_fd, (struct sockaddr *)&addr, &addrlen)) < 0)
-    {
-        pinlog(ERROR, "Listen: %s", strerror(errno));
-        close(server_fd);
-        return_out = EXIT_FAILURE;
-        goto CLEANUP;
-    }
-    char* buff = (char*)pmalloc(2048);
-    int r = read(ns,buff,2047);
-    buff[r] = '\0';
-    HTTP http_struct;
-    int s = http_parse(&http_struct, buff, r);
-    pinlog(INFO, "Path: %s\n",http_struct.path.s);
-    if(s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
-    //printf("%s\n", buff);
-    pinlog(INFO, "Host: %s", http_struct.host.s);
-    pinlog(INFO, "User-Agent: %s", http_struct.user_agent.s);
-    send(ns, payload, strlen(payload), 0);
-    close(ns);
+  // Socket init
+  int server_fd, ns;
+  struct sockaddr_in addr;
+  int opt = 1;
+  socklen_t addrlen = sizeof(addr);
+  char* payload = "<html><body><h1>Hello</h1><body></html>";
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    pinlog(ERROR, "Socket failed: %s", strerror(errno));
+    return_out = EXIT_FAILURE;
+    goto CLEANUP;
+  }
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+    pinlog(ERROR, "Setsockopt failed: %s", strerror(errno));
     close(server_fd);
+    return_out = EXIT_FAILURE;
+    goto CLEANUP;
+  }
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+  const int port = 8080;
+  addr.sin_port = htons(port);
+  if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    pinlog(ERROR, "Binding failed: %s", strerror(errno));
+    close(server_fd);
+    return_out = EXIT_FAILURE;
+    goto CLEANUP;
+  }
+  const int connections_to_queue = 2;
+  if (listen(server_fd, connections_to_queue) < 0) {
+    pinlog(ERROR, "Listen: %s", strerror(errno));
+    close(server_fd);
+    return_out = EXIT_FAILURE;
+    goto CLEANUP;
+  }
+  if ((ns = accept(server_fd, (struct sockaddr*)&addr, &addrlen)) < 0) {
+    pinlog(ERROR, "Listen: %s", strerror(errno));
+    close(server_fd);
+    return_out = EXIT_FAILURE;
+    goto CLEANUP;
+  }
+  char* buff = (char*)pmalloc(2048);
+  int r = read(ns, buff, 2047);
+  buff[r] = '\0';
+  HTTP http_struct;
+  int s = http_parse(&http_struct, buff, r);
+  pinlog(INFO, "Path: %s\n", http_struct.path.s);
+  if (s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
+  // printf("%s\n", buff);
+  pinlog(INFO, "Host: %s", http_struct.host.s);
+  pinlog(INFO, "User-Agent: %s", http_struct.user_agent.s);
+  send(ns, payload, strlen(payload), 0);
+  close(ns);
+  close(server_fd);
 CLEANUP:
-    /*
-    for (int i = 0; i < conf.columns; i++)
-    {
-        pfree(conf.values[i]->k);
-        pfree(conf.values[i]->v);
-        pfree(conf.values[i]);
-    }
-    pfree(conf.values);
-    */
-    pfree(http_struct.path.s);
-    http_struct.path.s = NULL;
-    http_struct.path.size = 0;
-    pfree(http_struct.host.s);
-    http_struct.host.s = NULL;
-    http_struct.host.size = 0;
-    pfree(http_struct.user_agent.s);
-    http_struct.user_agent.s = NULL;  
-    http_struct.user_agent.size = 0;  
-    pfree(buff);
-    
-    return return_out;
+  /*
+  for (int i = 0; i < conf.columns; i++)
+  {
+      pfree(conf.values[i]->k);
+      pfree(conf.values[i]->v);
+      pfree(conf.values[i]);
+  }
+  pfree(conf.values);
+  */
+  pfree(http_struct.path.s);
+  http_struct.path.s = NULL;
+  http_struct.path.size = 0;
+  pfree(http_struct.host.s);
+  http_struct.host.s = NULL;
+  http_struct.host.size = 0;
+  pfree(http_struct.user_agent.s);
+  http_struct.user_agent.s = NULL;
+  http_struct.user_agent.size = 0;
+  pfree(buff);
+
+  return return_out;
 }
