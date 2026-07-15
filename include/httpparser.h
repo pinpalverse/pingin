@@ -7,7 +7,6 @@
 
 #include "http.h"
 
-static char http_versions[1][4] = {"1.1"};
 
 int http_parse(HTTP* http, char* content, int content_size) {
   int line = 0;

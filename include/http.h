@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+static char http_versions[1][4] = {"1.1"};
+
 typedef enum { GET,
                POST } METHOD;
 
@@ -74,5 +76,7 @@ typedef struct  // Only HTTP 1.X
   PINHPM expires;
   PINHPM last_modified;
 } HTTP;
+
+
 
 #endif

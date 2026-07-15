@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "include/http.h"
+#include "include/httpdelegate.h"
 #include "include/httpparser.h"
 
 #ifndef EXIT_FAILURE
@@ -128,7 +130,25 @@ int main() {
   // printf("%s\n", buff);
   pinlog(INFO, "Host: %s", http_struct.host.s);
   pinlog(INFO, "User-Agent: %s", http_struct.user_agent.s);
-  send(ns, payload, strlen(payload), 0);
+
+  printf("================================\n");
+  char* ok = "OK";
+  char* ct = "text/html";
+  char* cl = NULL;
+
+  HTTP nh = {
+      .method = GET,
+      .status = 200,
+      .status_reason = {.s = "OK", .size = 3         },
+      .content_type = {.s = ct,   .size = strlen(ct)},
+      .content_length = {.s = "40", .size = 3         }
+  };
+  char* buffer;
+  if (create_http_string(&nh, buffer, http_versions[0]) != 0) pinlog(ERROR, "Failed to make http sring");
+
+  snprintf(buffer, strlen(payload), "%s\r\n%s", buffer, payload);
+
+  send(ns, buffer, strlen(buffer), 0);
   close(ns);
   close(server_fd);
 CLEANUP:
@@ -141,6 +161,7 @@ CLEANUP:
   }
   pfree(conf.values);
   */
+  pfree(buffer);
   pfree(http_struct.path.s);
   http_struct.path.s = NULL;
   http_struct.path.size = 0;
