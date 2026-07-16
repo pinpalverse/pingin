@@ -143,10 +143,11 @@ int main() {
       .content_type = {.s = ct,   .size = strlen(ct)},
       .content_length = {.s = "40", .size = 3         }
   };
-  char* buffer;
-  if (create_http_string(&nh, buffer, http_versions[0]) != 0) pinlog(ERROR, "Failed to make http sring");
+  char* buffer = create_http_string(&nh, http_versions[0]);
+  if (buffer == NULL) pinlog(ERROR, "Failed to make http sring");
 
-  snprintf(buffer, strlen(payload), "%s\r\n%s", buffer, payload);
+  buffer = prealloc(buffer, strlen(buffer) + strlen(payload) + 10);
+  sprintf(buffer, "%s\r\n%s", buffer, payload);
 
   send(ns, buffer, strlen(buffer), 0);
   close(ns);

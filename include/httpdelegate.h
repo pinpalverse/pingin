@@ -1,19 +1,21 @@
 #ifndef __PIN_HTTP_DELEGATE
 #define __PIN_HTTP_DELEGATE
 
+#include <pinlog/pinlog.h>
 #include <pinmem/pinmem.h>
 #include <stdio.h>
 
 #include "http.h"
 
-int create_http_string(HTTP* http_header, char* buffer, char* http_version) {
+char* create_http_string(HTTP* http_header, char* http_version) {
   // So far only HTTP
   // The if statements were AI-generated cause there are a lot
   // TODO: Fix the size bounds, cause the size isn't checked for a reallocation
   //        The first attempt is merely for prototyping
   int count = 0;
   int initial_size = 100;
-  buffer = (char*)pmalloc(initial_size);
+  int current_size = initial_size;
+  char* buffer = (char*)pmalloc(initial_size);
 
   count = snprintf(buffer, initial_size, "HTTP/%s %d %s\r\n", http_version, http_header->status, http_header->status_reason.s);
 
@@ -87,7 +89,14 @@ int create_http_string(HTTP* http_header, char* buffer, char* http_version) {
   }
   if (http_header->content_length.s != NULL && http_header->content_length.size > 0) {
     // Content-Length: ...
-    count = snprintf(buffer, initial_size - count, "%sContent-Length: %s\r\n", buffer, http_header->content_length.s);
+    if (count >= current_size) {
+      buffer = (char*)prealloc(buffer, count + initial_size);
+      if (!buffer) {
+        pinlog(ERROR, "Cannot reallocate new memory space");
+      }
+      current_size = count + initial_size;
+    }
+    count = sprintf(buffer, "%sContent-Length: %s\r\n", buffer, http_header->content_length.s);
   }
   if (http_header->content_location.s != NULL && http_header->content_location.size > 0) {
     // add Content-Location header
@@ -100,7 +109,14 @@ int create_http_string(HTTP* http_header, char* buffer, char* http_version) {
   }
   if (http_header->content_type.s != NULL && http_header->content_type.size > 0) {
     // Content-Type: ...
-    count = snprintf(buffer, initial_size, "%sContent-Type: %s\r\n", buffer, http_header->content_type.s);
+    if (count >= current_size) {
+      buffer = (char*)prealloc(buffer, count + initial_size);
+      if (!buffer) {
+        pinlog(ERROR, "Cannot reallocate new memory space");
+      }
+      current_size = count + initial_size;
+    }
+    count = sprintf(buffer, "%sContent-Type: %s\r\n", buffer, http_header->content_type.s);
   }
   if (http_header->expires.s != NULL && http_header->expires.size > 0) {
     // add Expires header
@@ -109,7 +125,7 @@ int create_http_string(HTTP* http_header, char* buffer, char* http_version) {
     // add Last-Modified header
   }
 
-  return 0;
+  return buffer;
 }
 
 // HTTP create_basic_response(METHOD method, int status) {

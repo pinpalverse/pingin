@@ -23,6 +23,7 @@ set(CMAKE_BUILD_RPATH
 set(CMAKE_INSTALL_RPATH 
     "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
 )
+set(CMAKE_CXX_FLAGS "-g") 
 
 # ---------------------------------------------------------------------
 # Libraries
