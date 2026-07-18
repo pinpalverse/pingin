@@ -7,7 +7,6 @@
 
 #include "http.h"
 
-
 int http_parse(HTTP* http, char* content, int content_size) {
   int line = 0;
   char* tk = strtok(content, "\n");
@@ -16,9 +15,9 @@ int http_parse(HTTP* http, char* content, int content_size) {
       goto NEXT;
     }
     if (line == 0) {
-      char method[10];
-      char path[2048];
-      char version[100];
+      char method[10] = {'\0'};
+      char path[2048] = {'\0'};
+      char version[100] = {'\0'};
       sscanf(tk, "%s %s %s", method, path, version);
       if (strcmp(method, "GET") == 0)
         http->method = GET;
@@ -27,7 +26,8 @@ int http_parse(HTTP* http, char* content, int content_size) {
       else
         pinlog(WARN, "HTTP method '%s' unsupported.", method);
       http->path.size = strlen(path);
-      http->path.s = (char*)pmalloc(http->path.size);
+      http->path.s = (char*)pmalloc(http->path.size + 1);
+      memset(http->path.s, '\0', http->path.size + 1);
       strncpy(http->path.s, path, http->path.size);
     } else {
       size_t key_size;
@@ -45,7 +45,7 @@ int http_parse(HTTP* http, char* content, int content_size) {
         strncpy(http->user_agent.s, &c[2], value_size);
       }
 
-      pinlog(INFO, "%s\n\tKey Size: %d\n\tValue Size: %d", tk, key_size, value_size);
+      // pinlog(INFO, "%s\n\tKey Size: %d\n\tValue Size: %d", tk, key_size, value_size);
     }
 
   NEXT:

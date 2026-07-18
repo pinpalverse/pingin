@@ -125,6 +125,7 @@ int main() {
   buff[r] = '\0';
   HTTP http_struct;
   int s = http_parse(&http_struct, buff, r);
+  pinlog(INFO, "Method: %s\n", http_struct.method);
   pinlog(INFO, "Path: %s\n", http_struct.path.s);
   if (s != 0) pinlog(ERROR, "Error occured while parsing the HTTP header");
   // printf("%s\n", buff);
