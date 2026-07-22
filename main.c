@@ -2,6 +2,7 @@
 #include <netinet/in.h>
 #include <pinlog/pinlog.h>
 #include <pinmem/pinmem.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -142,12 +143,19 @@ int main() {
       .status = 200,
       .status_reason = {.s = "OK", .size = 3         },
       .content_type = {.s = ct,   .size = strlen(ct)},
-      .content_length = {.s = "40", .size = 3         }
+
   };
+  // Count digits
+  int digits = snprintf(NULL, 0, "%ld", strlen(ct));
+  nh.content_length.s = (char*)pmalloc((digits * sizeof(char)) + 1);
+  memset(nh.content_length.s, '\0', (digits * sizeof(char)) + 1);
+  snprintf(nh.content_length.s, digits, "%ld", strlen(ct));
+  nh.content_length.size = digits+1;
   char* buffer = create_http_string(&nh, http_versions[0]);
   if (buffer == NULL) pinlog(ERROR, "Failed to make http sring");
 
   buffer = prealloc(buffer, strlen(buffer) + strlen(payload) + 10);
+  memset(buffer, '\0',strlen(buffer) + strlen(payload) + 10);
   sprintf(buffer, "%s\r\n%s", buffer, payload);
 
   send(ns, buffer, strlen(buffer), 0);
@@ -165,6 +173,7 @@ CLEANUP:
   */
   pfree(buffer);
   pfree(http_struct.path.s);
+  pfree(nh.content_length.s);
   http_struct.path.s = NULL;
   http_struct.path.size = 0;
   pfree(http_struct.host.s);
