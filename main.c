@@ -1,16 +1,13 @@
 // #include "pinconf/pinconf.h"
-#include <netinet/in.h>
 #include <pinlog/pinlog.h>
 #include <pinmem/pinmem.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 #include "include/http.h"
 #include "include/httpdelegate.h"
 #include "include/httpparser.h"
+#include "include/server.h"
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
@@ -81,43 +78,26 @@ int main() {
       goto CLEANUP;
   }*/
 
+  /* SOCKET CODE */
   // Socket init
-  int server_fd, ns;
-  struct sockaddr_in addr;
+  int ns;
   int opt = 1;
-  socklen_t addrlen = sizeof(addr);
-  char* payload = "<html><body><h1>Hello</h1><body></html>";
-  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    pinlog(ERROR, "Socket failed: %s", strerror(errno));
+  server_t* srv = init_socket(opt, 8080);
+  if (!srv) {
     return_out = EXIT_FAILURE;
     goto CLEANUP;
   }
-  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
-    pinlog(ERROR, "Setsockopt failed: %s", strerror(errno));
-    close(server_fd);
-    return_out = EXIT_FAILURE;
-    goto CLEANUP;
-  }
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  const int port = 8080;
-  addr.sin_port = htons(port);
-  if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-    pinlog(ERROR, "Binding failed: %s", strerror(errno));
-    close(server_fd);
-    return_out = EXIT_FAILURE;
-    goto CLEANUP;
-  }
+
   const int connections_to_queue = 2;
-  if (listen(server_fd, connections_to_queue) < 0) {
+  if (listen(srv->server_fd, connections_to_queue) < 0) {
     pinlog(ERROR, "Listen: %s", strerror(errno));
-    close(server_fd);
+    close(srv->server_fd);
     return_out = EXIT_FAILURE;
     goto CLEANUP;
   }
-  if ((ns = accept(server_fd, (struct sockaddr*)&addr, &addrlen)) < 0) {
+  if ((ns = accept(srv->server_fd, (struct sockaddr*)&srv->addr, (socklen_t*)&srv->addrlen)) < 0) {
     pinlog(ERROR, "Listen: %s", strerror(errno));
-    close(server_fd);
+    close(srv->server_fd);
     return_out = EXIT_FAILURE;
     goto CLEANUP;
   }
@@ -138,29 +118,29 @@ int main() {
   char* ct = "text/html";
   char* cl = NULL;
 
+  char* payload = "<html><body><h1>Hello</h1><body></html>";
+  // Count digits
+  int digits = snprintf(NULL, 0, "%ld", strlen(payload));
+  cl = (char*)pmalloc((digits * sizeof(char)) + 1);
+  memset(cl, '\0', (digits * sizeof(char)) + 1);
+  snprintf(cl, digits + 1, "%ld", strlen(payload));
+  pinlog(INFO, "Content Length: '%s' '%s'", cl, payload);
   HTTP nh = {
       .method = GET,
       .status = 200,
       .status_reason = {.s = "OK", .size = 3         },
       .content_type = {.s = ct,   .size = strlen(ct)},
-
+      .content_length = {.s = cl,   .size = strlen(cl)}
   };
-  // Count digits
-  int digits = snprintf(NULL, 0, "%ld", strlen(ct));
-  nh.content_length.s = (char*)pmalloc((digits * sizeof(char)) + 1);
-  memset(nh.content_length.s, '\0', (digits * sizeof(char)) + 1);
-  snprintf(nh.content_length.s, digits, "%ld", strlen(ct));
-  nh.content_length.size = digits+1;
   char* buffer = create_http_string(&nh, http_versions[0]);
   if (buffer == NULL) pinlog(ERROR, "Failed to make http sring");
 
   buffer = prealloc(buffer, strlen(buffer) + strlen(payload) + 10);
-  memset(buffer, '\0',strlen(buffer) + strlen(payload) + 10);
   sprintf(buffer, "%s\r\n%s", buffer, payload);
-
+  pinlog(INFO, "Buffer: '%s'", buffer);
   send(ns, buffer, strlen(buffer), 0);
   close(ns);
-  close(server_fd);
+  close(srv->server_fd);
 CLEANUP:
   /*
   for (int i = 0; i < conf.columns; i++)
@@ -172,6 +152,7 @@ CLEANUP:
   pfree(conf.values);
   */
   pfree(buffer);
+  pfree(srv);
   pfree(http_struct.path.s);
   pfree(nh.content_length.s);
   http_struct.path.s = NULL;
